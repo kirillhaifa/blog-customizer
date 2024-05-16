@@ -1,3 +1,5 @@
+const { endOfLine } = require('./.prettierrc');
+
 module.exports = {
 	parser: '@typescript-eslint/parser',
 	parserOptions: {
@@ -9,11 +11,11 @@ module.exports = {
 		react: {
 			version: 'detect',
 		},
-		"import/resolver": {
+		'import/resolver': {
 			typescript: {
-				project: "tsconfig.json",
-			}
-		}
+				project: 'tsconfig.json',
+			},
+		},
 	},
 	extends: [
 		'plugin:@typescript-eslint/recommended',
@@ -29,6 +31,7 @@ module.exports = {
 	rules: {
 		semi: [2, 'always'],
 		quotes: [2, 'single', { avoidEscape: true }],
+		'prettier/prettier': ['error', { endOfLine: 'auto' }],
 		'no-unused-vars': 'off',
 		'@typescript-eslint/no-unused-vars': ['error'],
 		'@typescript-eslint/no-var-requires': 'off',
