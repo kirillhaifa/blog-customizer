@@ -10,6 +10,7 @@ import {
 	contentWidthArr,
 	OptionType,
 	defaultArticleState,
+	defaultStyle,
 } from 'src/constants/articleProps';
 import { RadioGroup } from '../radio-group';
 import { Separator } from '../separator';
@@ -31,13 +32,13 @@ export type ParamsType = {
 };
 
 export const ArticleParamsForm: React.FC<{
-	resetAction: (resetFormParams: () => void) => void;
 	articleParams: ParamsType;
-	setStyle: any;
-}> = ({ resetAction, setStyle }) => {
+	setStyle: React.Dispatch<React.SetStateAction<CSSProperties>>;
+}> = ({ articleParams, setStyle }) => {
 	const [formOpen, setFormOpen] = useState(false);
 	const containerRef = useRef<HTMLDivElement>(null);
 
+	//состояния формы
 	const [selectedFontFamilyFormOption, setSelectedFontFamilyFormOption] =
 		useState(fontFamilyOptions[0]);
 	const [selectedFontSizeFormOption, setSelectedFontSizeFormOption] = useState(
@@ -52,6 +53,7 @@ export const ArticleParamsForm: React.FC<{
 	const [selectedContentWidthFormOption, setSelectedContentWidthFormOption] =
 		useState(contentWidthArr[0]);
 
+	//состояния формы собранные в объект
 	const formParameters = {
 		fontFamily: {
 			selectedOption: selectedFontFamilyFormOption,
@@ -75,43 +77,24 @@ export const ArticleParamsForm: React.FC<{
 		},
 	};
 
-	const resetFormParams = () => {
-		setSelectedFontFamilyFormOption(defaultArticleState.fontFamilyOption);
-		setSelectedFontSizeFormOption(defaultArticleState.fontSizeOption);
-		setSelectedFontColorFormOption(defaultArticleState.fontColor);
-		setSelectedBackgroundColorFormOption(defaultArticleState.backgroundColor);
-		setSelectedContentWidthFormOption(defaultArticleState.contentWidth);
-	};
-
+	//обработка изменений в селекте
 	const handleSelectChange = (
 		optionKey: keyof ParamsType,
 		selectedOption: OptionType
 	) => {
+		//изменение стейтов app реализовано при изменении в селекте
+		//если реализовать присвоение состояний формы состониям app в сабмите
+		//и применять состояния app к статье, они не успевают обновиться
+		//и сабмит работает только со второго раза и некорректно.
+		//а с такой реализацией работает корректно при любых сценариях
 		formParameters[optionKey].selectOption(selectedOption);
+		articleParams[optionKey].selectOption(selectedOption);
 	};
 
-	const handleSubmit = (
-		evt: FormEvent<HTMLFormElement>,
-		articleParams: ParamsType
-	) => {
+	//сабмит формы
+	const handleSubmit = (evt: FormEvent<HTMLFormElement>) => {
 		evt.preventDefault();
 
-		// Сначала обновляем состояния с новыми значениями из formParameters
-		articleParams.fontFamily.selectOption(
-			formParameters.fontFamily.selectedOption
-		);
-		articleParams.fontSize.selectOption(formParameters.fontSize.selectedOption);
-		articleParams.fontColor.selectOption(
-			formParameters.fontColor.selectedOption
-		);
-		articleParams.backgroundColor.selectOption(
-			formParameters.backgroundColor.selectedOption
-		);
-		articleParams.contentWidth.selectOption(
-			formParameters.contentWidth.selectedOption
-		);
-
-		// Затем обновляем стили
 		setStyle({
 			'--font-family': articleParams.fontFamily.selectedOption.value,
 			'--font-size': articleParams.fontSize.selectedOption.value,
@@ -123,6 +106,33 @@ export const ArticleParamsForm: React.FC<{
 		toggleForm();
 	};
 
+	//обработка ресета
+	const handleReset = () => {
+		//применяем  дефолтные стили
+		setStyle(defaultStyle);
+
+		//обновляем состояние формы
+		formParameters.fontFamily.selectOption(
+			defaultArticleState.fontFamilyOption
+		);
+		formParameters.fontSize.selectOption(defaultArticleState.fontSizeOption);
+		formParameters.fontColor.selectOption(defaultArticleState.fontColor);
+		formParameters.backgroundColor.selectOption(
+			defaultArticleState.backgroundColor
+		);
+		formParameters.contentWidth.selectOption(defaultArticleState.contentWidth);
+
+		//обновляем состояние app
+		articleParams.fontFamily.selectOption(defaultArticleState.fontFamilyOption);
+		articleParams.fontSize.selectOption(defaultArticleState.fontSizeOption);
+		articleParams.fontColor.selectOption(defaultArticleState.fontColor);
+		articleParams.backgroundColor.selectOption(
+			defaultArticleState.backgroundColor
+		);
+		articleParams.contentWidth.selectOption(defaultArticleState.contentWidth);
+	};
+
+	//навешиваем и убираем слушатель на экран при каждом рендере
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
 			if (formOpen && !containerRef.current?.contains(event.target as Node)) {
@@ -136,6 +146,7 @@ export const ArticleParamsForm: React.FC<{
 		};
 	}, [formOpen]);
 
+	//открытие - зыкрытие меню
 	const toggleForm = () => {
 		setFormOpen(!formOpen);
 		if (containerRef.current) {
@@ -147,9 +158,7 @@ export const ArticleParamsForm: React.FC<{
 		<div ref={containerRef} className={styles.container}>
 			<ArrowButton isOpen={formOpen} onClick={toggleForm} />
 			<aside className={styles.formContainer}>
-				<form
-					className={styles.form}
-					onSubmit={(event) => handleSubmit(event, formParameters)}>
+				<form className={styles.form} onSubmit={handleSubmit}>
 					<Text family={'open-sans'} size={31} weight={800} uppercase={true}>
 						{'Задайте параметры'}
 					</Text>
@@ -196,11 +205,7 @@ export const ArticleParamsForm: React.FC<{
 						selected={formParameters.contentWidth.selectedOption}
 					/>
 					<div className={styles.bottomContainer}>
-						<Button
-							title='Сбросить'
-							type='reset'
-							onClick={() => resetAction(resetFormParams)}
-						/>
+						<Button title='Сбросить' type='reset' onClick={handleReset} />
 						<Button title='Применить' type='submit' />
 					</div>
 				</form>

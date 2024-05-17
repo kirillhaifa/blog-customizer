@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client';
-import { StrictMode, CSSProperties, useState } from 'react';
+import { StrictMode, useState } from 'react';
 import clsx from 'clsx';
 import { Article } from './components/article/Article';
 import { ArticleParamsForm } from './components/article-params-form/ArticleParamsForm';
@@ -7,17 +7,18 @@ import './styles/index.scss';
 import styles from './styles/index.module.scss';
 import {
 	fontFamilyOptions,
-	defaultArticleState,
 	fontSizeOptions,
 	fontColors,
 	backgroundColors,
 	contentWidthArr,
+	defaultStyle,
 } from 'src/constants/articleProps';
 
 const domNode = document.getElementById('root') as HTMLDivElement;
 const root = createRoot(domNode);
 
 const App = () => {
+	//состояния статьи
 	const [selectedFontFamily, setSelectedFontFamily] = useState(
 		fontFamilyOptions[0]
 	);
@@ -30,6 +31,7 @@ const App = () => {
 		contentWidthArr[0]
 	);
 
+	//состояния статьи собранные в объект
 	const articleParams = {
 		fontFamily: {
 			selectedOption: selectedFontFamily,
@@ -53,35 +55,11 @@ const App = () => {
 		},
 	};
 
-	const defaultStyle = {
-		'--font-family': defaultArticleState.fontFamilyOption.value,
-		'--font-size': defaultArticleState.fontSizeOption.value,
-		'--font-color': defaultArticleState.fontColor.value,
-		'--container-width': defaultArticleState.contentWidth.value,
-		'--bg-color': defaultArticleState.backgroundColor.value,
-	} as CSSProperties;
-
-	const handleReset = (resetFormParams: () => void) => {
-		setStyle(defaultStyle);
-
-		setSelectedFontFamily(defaultArticleState.fontFamilyOption);
-		setSelectedFontSize(defaultArticleState.fontSizeOption);
-		setSelectedFontColor(defaultArticleState.fontColor);
-		setSelectedBackgroundColor(defaultArticleState.backgroundColor);
-		setSelectedContentWidth(defaultArticleState.contentWidth);
-
-		resetFormParams();
-	};
-
 	const [style, setStyle] = useState(defaultStyle);
 
 	return (
 		<div className={clsx(styles.main)} style={style}>
-			<ArticleParamsForm
-				resetAction={handleReset}
-				articleParams={articleParams}
-				setStyle={setStyle}
-			/>
+			<ArticleParamsForm articleParams={articleParams} setStyle={setStyle} />
 			<Article />
 		</div>
 	);
