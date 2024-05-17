@@ -1,6 +1,6 @@
 import { ArrowButton } from 'components/arrow-button';
 import { Button } from 'components/button';
-import { useRef, useEffect, useState, FormEvent, CSSProperties } from 'react';
+import { useRef, useEffect, useState, FormEvent } from 'react';
 import { Select } from '../select';
 import {
 	fontFamilyOptions,
@@ -10,7 +10,6 @@ import {
 	contentWidthArr,
 	OptionType,
 	defaultArticleState,
-	defaultStyle,
 } from 'src/constants/articleProps';
 import { RadioGroup } from '../radio-group';
 import { Separator } from '../separator';
@@ -33,25 +32,24 @@ export type ParamsType = {
 
 export const ArticleParamsForm: React.FC<{
 	articleParams: ParamsType;
-	setStyle: React.Dispatch<React.SetStateAction<CSSProperties>>;
-}> = ({ articleParams, setStyle }) => {
+}> = ({ articleParams }) => {
 	const [formOpen, setFormOpen] = useState(false);
 	const containerRef = useRef<HTMLDivElement>(null);
 
 	//состояния формы
 	const [selectedFontFamilyFormOption, setSelectedFontFamilyFormOption] =
-		useState(fontFamilyOptions[0]);
+		useState(articleParams.fontFamily.selectedOption);
 	const [selectedFontSizeFormOption, setSelectedFontSizeFormOption] = useState(
-		fontSizeOptions[0]
+		articleParams.fontSize.selectedOption
 	);
 	const [selectedFontColorFormOption, setSelectedFontColorFormOption] =
-		useState(fontColors[0]);
+		useState(articleParams.fontColor.selectedOption);
 	const [
 		selectedBackgroundColorFormOption,
 		setSelectedBackgroundColorFormOption,
-	] = useState(backgroundColors[0]);
+	] = useState(articleParams.backgroundColor.selectedOption);
 	const [selectedContentWidthFormOption, setSelectedContentWidthFormOption] =
-		useState(contentWidthArr[0]);
+		useState(articleParams.contentWidth.selectedOption);
 
 	//состояния формы собранные в объект
 	const formParameters = {
@@ -78,39 +76,36 @@ export const ArticleParamsForm: React.FC<{
 	};
 
 	//обработка изменений в селекте
-	const handleSelectChange = (
-		optionKey: keyof ParamsType,
-		selectedOption: OptionType
-	) => {
-		//изменение стейтов app реализовано при изменении в селекте
-		//если реализовать присвоение состояний формы состониям app в сабмите
-		//и применять состояния app к статье, они не успевают обновиться
-		//и сабмит работает только со второго раза и некорректно.
-		//а с такой реализацией работает корректно при любых сценариях
-		formParameters[optionKey].selectOption(selectedOption);
-		articleParams[optionKey].selectOption(selectedOption);
+	const handleChange = (optionName: keyof ParamsType) => {
+		return (selectedOption: OptionType) => {
+			formParameters[optionName].selectOption(selectedOption);
+		};
 	};
 
 	//сабмит формы
 	const handleSubmit = (evt: FormEvent<HTMLFormElement>) => {
 		evt.preventDefault();
 
-		setStyle({
-			'--font-family': articleParams.fontFamily.selectedOption.value,
-			'--font-size': articleParams.fontSize.selectedOption.value,
-			'--font-color': articleParams.fontColor.selectedOption.value,
-			'--container-width': articleParams.contentWidth.selectedOption.value,
-			'--bg-color': articleParams.backgroundColor.selectedOption.value,
-		} as CSSProperties);
+		//обновляем состояние app
+		articleParams.fontFamily.selectOption(
+			formParameters.fontFamily.selectedOption
+		);
+		articleParams.fontSize.selectOption(formParameters.fontSize.selectedOption);
+		articleParams.fontColor.selectOption(
+			formParameters.fontColor.selectedOption
+		);
+		articleParams.backgroundColor.selectOption(
+			formParameters.backgroundColor.selectedOption
+		);
+		articleParams.contentWidth.selectOption(
+			formParameters.contentWidth.selectedOption
+		);
 
 		toggleForm();
 	};
 
 	//обработка ресета
 	const handleReset = () => {
-		//применяем  дефолтные стили
-		setStyle(defaultStyle);
-
 		//обновляем состояние формы
 		formParameters.fontFamily.selectOption(
 			defaultArticleState.fontFamilyOption
@@ -165,43 +160,33 @@ export const ArticleParamsForm: React.FC<{
 					<Select
 						options={fontFamilyOptions}
 						title='Шрифт'
-						onChange={(selectedOption) =>
-							handleSelectChange('fontFamily', selectedOption)
-						}
+						onChange={handleChange('fontFamily')}
 						selected={formParameters.fontFamily.selectedOption}
 					/>
 					<RadioGroup
 						selected={formParameters.fontSize.selectedOption}
 						name='radio'
-						onChange={(selectedOption) =>
-							handleSelectChange('fontSize', selectedOption)
-						}
+						onChange={handleChange('fontSize')}
 						options={fontSizeOptions}
 						title='Размер шрифта'
 					/>
 					<Select
 						options={fontColors}
 						title='Цвет шрифта'
-						onChange={(selectedOption) =>
-							handleSelectChange('fontColor', selectedOption)
-						}
+						onChange={handleChange('fontColor')}
 						selected={formParameters.fontColor.selectedOption}
 					/>
 					<Separator />
 					<Select
 						options={backgroundColors}
 						title='Цвет фона'
-						onChange={(selectedOption) =>
-							handleSelectChange('backgroundColor', selectedOption)
-						}
+						onChange={handleChange('backgroundColor')}
 						selected={formParameters.backgroundColor.selectedOption}
 					/>
 					<Select
 						options={contentWidthArr}
 						title='Ширина контента'
-						onChange={(selectedOption) =>
-							handleSelectChange('contentWidth', selectedOption)
-						}
+						onChange={handleChange('contentWidth')}
 						selected={formParameters.contentWidth.selectedOption}
 					/>
 					<div className={styles.bottomContainer}>
