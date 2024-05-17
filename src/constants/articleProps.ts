@@ -1,3 +1,5 @@
+import { CSSProperties } from 'react';
+
 export const fontFamilyClasses = [
 	'open-sans',
 	'ubuntu',
@@ -177,3 +179,11 @@ export const defaultArticleState = {
 };
 
 export type ArticleStateType = typeof defaultArticleState;
+
+export const defaultStyle = {
+	'--font-family': defaultArticleState.fontFamilyOption.value,
+	'--font-size': defaultArticleState.fontSizeOption.value,
+	'--font-color': defaultArticleState.fontColor.value,
+	'--container-width': defaultArticleState.contentWidth.value,
+	'--bg-color': defaultArticleState.backgroundColor.value,
+} as CSSProperties;
