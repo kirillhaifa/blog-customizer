@@ -1,6 +1,6 @@
 import { ArrowButton } from 'components/arrow-button';
 import { Button } from 'components/button';
-import { useRef, useEffect, useState, FormEvent } from 'react';
+import { useRef, useEffect, useState, FormEvent, CSSProperties } from 'react';
 import { Select } from '../select';
 import {
 	fontFamilyOptions,
@@ -9,6 +9,7 @@ import {
 	backgroundColors,
 	contentWidthArr,
 	OptionType,
+	defaultArticleState,
 } from 'src/constants/articleProps';
 import { RadioGroup } from '../radio-group';
 import { Separator } from '../separator';
@@ -30,19 +31,97 @@ export type ParamsType = {
 };
 
 export const ArticleParamsForm: React.FC<{
-	submitAction: (
-		evt: FormEvent<HTMLFormElement>,
-		toggleForm: () => void
-	) => void;
-	resetAction: () => void;
-	changeAction: (
-		optionKey: keyof ParamsType,
-		selectedOption: OptionType
-	) => void;
-	formParameters: ParamsType;
-}> = ({ submitAction, resetAction, changeAction, formParameters }) => {
+	resetAction: (resetFormParams: () => void) => void;
+	articleParams: ParamsType;
+	setStyle: any;
+}> = ({ resetAction, setStyle }) => {
 	const [formOpen, setFormOpen] = useState(false);
 	const containerRef = useRef<HTMLDivElement>(null);
+
+	const [selectedFontFamilyFormOption, setSelectedFontFamilyFormOption] =
+		useState(fontFamilyOptions[0]);
+	const [selectedFontSizeFormOption, setSelectedFontSizeFormOption] = useState(
+		fontSizeOptions[0]
+	);
+	const [selectedFontColorFormOption, setSelectedFontColorFormOption] =
+		useState(fontColors[0]);
+	const [
+		selectedBackgroundColorFormOption,
+		setSelectedBackgroundColorFormOption,
+	] = useState(backgroundColors[0]);
+	const [selectedContentWidthFormOption, setSelectedContentWidthFormOption] =
+		useState(contentWidthArr[0]);
+
+	const formParameters = {
+		fontFamily: {
+			selectedOption: selectedFontFamilyFormOption,
+			selectOption: setSelectedFontFamilyFormOption,
+		},
+		fontSize: {
+			selectedOption: selectedFontSizeFormOption,
+			selectOption: setSelectedFontSizeFormOption,
+		},
+		fontColor: {
+			selectedOption: selectedFontColorFormOption,
+			selectOption: setSelectedFontColorFormOption,
+		},
+		backgroundColor: {
+			selectedOption: selectedBackgroundColorFormOption,
+			selectOption: setSelectedBackgroundColorFormOption,
+		},
+		contentWidth: {
+			selectedOption: selectedContentWidthFormOption,
+			selectOption: setSelectedContentWidthFormOption,
+		},
+	};
+
+	const resetFormParams = () => {
+		setSelectedFontFamilyFormOption(defaultArticleState.fontFamilyOption);
+		setSelectedFontSizeFormOption(defaultArticleState.fontSizeOption);
+		setSelectedFontColorFormOption(defaultArticleState.fontColor);
+		setSelectedBackgroundColorFormOption(defaultArticleState.backgroundColor);
+		setSelectedContentWidthFormOption(defaultArticleState.contentWidth);
+	};
+
+	const handleSelectChange = (
+		optionKey: keyof ParamsType,
+		selectedOption: OptionType
+	) => {
+		formParameters[optionKey].selectOption(selectedOption);
+	};
+
+	const handleSubmit = (
+		evt: FormEvent<HTMLFormElement>,
+		articleParams: ParamsType
+	) => {
+		evt.preventDefault();
+
+		// Сначала обновляем состояния с новыми значениями из formParameters
+		articleParams.fontFamily.selectOption(
+			formParameters.fontFamily.selectedOption
+		);
+		articleParams.fontSize.selectOption(formParameters.fontSize.selectedOption);
+		articleParams.fontColor.selectOption(
+			formParameters.fontColor.selectedOption
+		);
+		articleParams.backgroundColor.selectOption(
+			formParameters.backgroundColor.selectedOption
+		);
+		articleParams.contentWidth.selectOption(
+			formParameters.contentWidth.selectedOption
+		);
+
+		// Затем обновляем стили
+		setStyle({
+			'--font-family': articleParams.fontFamily.selectedOption.value,
+			'--font-size': articleParams.fontSize.selectedOption.value,
+			'--font-color': articleParams.fontColor.selectedOption.value,
+			'--container-width': articleParams.contentWidth.selectedOption.value,
+			'--bg-color': articleParams.backgroundColor.selectedOption.value,
+		} as CSSProperties);
+
+		toggleForm();
+	};
 
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
@@ -70,7 +149,7 @@ export const ArticleParamsForm: React.FC<{
 			<aside className={styles.formContainer}>
 				<form
 					className={styles.form}
-					onSubmit={(event) => submitAction(event, toggleForm)}>
+					onSubmit={(event) => handleSubmit(event, formParameters)}>
 					<Text family={'open-sans'} size={31} weight={800} uppercase={true}>
 						{'Задайте параметры'}
 					</Text>
@@ -78,7 +157,7 @@ export const ArticleParamsForm: React.FC<{
 						options={fontFamilyOptions}
 						title='Шрифт'
 						onChange={(selectedOption) =>
-							changeAction('fontFamily', selectedOption)
+							handleSelectChange('fontFamily', selectedOption)
 						}
 						selected={formParameters.fontFamily.selectedOption}
 					/>
@@ -86,24 +165,25 @@ export const ArticleParamsForm: React.FC<{
 						selected={formParameters.fontSize.selectedOption}
 						name='radio'
 						onChange={(selectedOption) =>
-							changeAction('fontSize', selectedOption)
+							handleSelectChange('fontSize', selectedOption)
 						}
 						options={fontSizeOptions}
-						title='Размер шрифта'></RadioGroup>
+						title='Размер шрифта'
+					/>
 					<Select
 						options={fontColors}
 						title='Цвет шрифта'
 						onChange={(selectedOption) =>
-							changeAction('fontColor', selectedOption)
+							handleSelectChange('fontColor', selectedOption)
 						}
 						selected={formParameters.fontColor.selectedOption}
 					/>
-					<Separator></Separator>
+					<Separator />
 					<Select
 						options={backgroundColors}
 						title='Цвет фона'
 						onChange={(selectedOption) =>
-							changeAction('backgroundColor', selectedOption)
+							handleSelectChange('backgroundColor', selectedOption)
 						}
 						selected={formParameters.backgroundColor.selectedOption}
 					/>
@@ -111,12 +191,16 @@ export const ArticleParamsForm: React.FC<{
 						options={contentWidthArr}
 						title='Ширина контента'
 						onChange={(selectedOption) =>
-							changeAction('contentWidth', selectedOption)
+							handleSelectChange('contentWidth', selectedOption)
 						}
 						selected={formParameters.contentWidth.selectedOption}
 					/>
 					<div className={styles.bottomContainer}>
-						<Button title='Сбросить' type='reset' onClick={resetAction} />
+						<Button
+							title='Сбросить'
+							type='reset'
+							onClick={() => resetAction(resetFormParams)}
+						/>
 						<Button title='Применить' type='submit' />
 					</div>
 				</form>
